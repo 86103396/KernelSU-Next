@@ -22,7 +22,6 @@ import com.rifsxd.ksunext.ui.util.HanziToPinyin
 import com.rifsxd.ksunext.ui.util.listModules
 import com.rifsxd.ksunext.ui.util.getModuleSize
 import com.rifsxd.ksunext.ui.util.zygiskRequired
-import com.rifsxd.ksunext.ui.util.zygiskAvailable
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -68,9 +67,15 @@ class ModuleViewModel : ViewModel() {
     var sortZToA by mutableStateOf(false)
     var sortSizeLowToHigh by mutableStateOf(false)
     var sortSizeHighToLow by mutableStateOf(false)
+    var sortEnabledFirst by mutableStateOf(false)
+    var sortActionFirst by mutableStateOf(false)
+    var sortWebUiFirst by mutableStateOf(false)
 
     val moduleList by derivedStateOf {
         val comparator = when {
+            sortWebUiFirst -> compareByDescending<ModuleInfo> { it.hasWebUi }
+            sortEnabledFirst -> compareByDescending<ModuleInfo> { it.enabled }
+            sortActionFirst -> compareByDescending<ModuleInfo> { it.hasActionScript }
             sortAToZ -> compareBy<ModuleInfo> { it.name.lowercase() }
             sortZToA -> compareByDescending<ModuleInfo> { it.name.lowercase() }
             sortSizeLowToHigh -> compareBy<ModuleInfo> { it.size }

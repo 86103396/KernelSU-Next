@@ -103,7 +103,10 @@ fun Uri.getFileName(context: Context): String? {
 
 fun createRootShell(globalMnt: Boolean = false): Shell {
     Shell.enableVerboseLogging = BuildConfig.DEBUG
-    val builder = Shell.Builder.create()
+    val builder = Shell.Builder.create().apply {
+        setFlags(Shell.FLAG_MOUNT_MASTER)
+    }
+
     return try {
         if (globalMnt) {
             builder.build(ksuDaemonMagicPath(), "debug", "su", "-g")
@@ -403,6 +406,22 @@ fun hasMagisk(): Boolean {
     return result.isSuccess
 }
 
+fun isGlobalNamespaceEnabled(): Boolean {
+    val shell = getRootShell()
+    val result =
+        ShellUtils.fastCmd(shell, "nsenter --mount=/proc/1/ns/mnt cat ${Natives.GLOBAL_NAMESPACE_FILE}")
+    Log.i(TAG, "is global namespace enabled: $result")
+    return result == "1"
+}
+
+fun setGlobalNamespaceEnabled(value: String) {
+    getRootShell().newJob()
+        .add("nsenter --mount=/proc/1/ns/mnt echo $value > ${Natives.GLOBAL_NAMESPACE_FILE}")
+        .submit { result ->
+            Log.i(TAG, "setGlobalNamespaceEnabled result: ${result.isSuccess} [${result.out}]")
+        }
+}
+
 fun isSepolicyValid(rules: String?): Boolean {
     if (rules == null) {
         return true
@@ -460,7 +479,7 @@ fun getFileName(context: Context, uri: Uri): String {
 
 fun moduleBackupDir(): String? {
     val shell = getRootShell()
-    val baseBackupDir = "/sdcard/.ksunext/modules"
+    val baseBackupDir = "/data/adb/ksu/backup/modules"
     val resultBase = ShellUtils.fastCmd(shell, "mkdir -p $baseBackupDir").trim()
     if (resultBase.isNotEmpty()) return null
 
@@ -488,7 +507,7 @@ fun moduleBackup(): Boolean {
 
     val tarName = "modules_backup_$timestamp.tar"
     val tarPath = "/data/local/tmp/$tarName"
-    val internalBackupDir = "/sdcard/.ksunext/modules"
+    val internalBackupDir = "/data/adb/ksu/backup/modules"
     val internalBackupPath = "$internalBackupDir/$tarName"
 
     val tarCmd = "$BUSYBOX tar -cpf $tarPath -C /data/adb/modules $(ls /data/adb/modules)"
@@ -508,7 +527,7 @@ fun moduleBackup(): Boolean {
 fun moduleRestore(): Boolean {
     val shell = getRootShell()
 
-    val findTarCmd = "ls -t /sdcard/.ksunext/modules/modules_backup_*.tar 2>/dev/null | head -n 1"
+    val findTarCmd = "ls -t /data/adb/ksu/backup/modules/modules_backup_*.tar 2>/dev/null | head -n 1"
     val tarPath = ShellUtils.fastCmd(shell, findTarCmd).trim()
     if (tarPath.isEmpty()) return false
 
@@ -531,7 +550,7 @@ fun allowlistBackup(): Boolean {
 
     val tarName = "allowlist_backup_$timestamp.tar"
     val tarPath = "/data/local/tmp/$tarName"
-    val internalBackupDir = "/sdcard/.ksunext/allowlist"
+    val internalBackupDir = "/data/adb/ksu/backup/allowlist"
     val internalBackupPath = "$internalBackupDir/$tarName"
 
     val tarCmd = "$BUSYBOX tar -cpf $tarPath -C /data/adb/ksu .allowlist"
@@ -551,8 +570,8 @@ fun allowlistBackup(): Boolean {
 fun allowlistRestore(): Boolean {
     val shell = getRootShell()
 
-    // Find the latest allowlist tar backup in /sdcard/.ksunext/allowlist
-    val findTarCmd = "ls -t /sdcard/.ksunext/allowlist/allowlist_backup_*.tar 2>/dev/null | head -n 1"
+    // Find the latest allowlist tar backup in /data/adb/ksu/backup/allowlist
+    val findTarCmd = "ls -t /data/adb/ksu/backup/allowlist/allowlist_backup_*.tar 2>/dev/null | head -n 1"
     val tarPath = ShellUtils.fastCmd(shell, findTarCmd).trim()
     if (tarPath.isEmpty()) return false
 
@@ -591,9 +610,16 @@ fun getSuSFSVariant(): String {
     val result = ShellUtils.fastCmd(shell, "${getSuSFSDaemonPath()} variant")
     return result
 }
+
 fun getSuSFSFeatures(): String {
     val shell = getRootShell()
     val result = ShellUtils.fastCmd(shell, "${getSuSFSDaemonPath()} features")
+    return result
+}
+
+fun hasSuSFs_SUS_SU(): String {
+    val shell = getRootShell()
+    val result = ShellUtils.fastCmd(shell, "${getSuSFSDaemonPath()} sus_su support")
     return result
 }
 
@@ -639,31 +665,6 @@ fun zygiskRequired(dir: File): Boolean {
     val cmd = "ls \"$zygiskLib\""
     val result = ShellUtils.fastCmdResult(shell, cmd)
     return result
-}
-
-fun zygiskAvailable(): Boolean {
-    val shell = getRootShell()
-    val zygiskLib = "libzygisk.so"
-    val rezygisk64 = "/data/adb/modules/rezygisk/lib64/$zygiskLib"
-    val rezygisk = "/data/adb/modules/rezygisk/lib/$zygiskLib"
-    val zygiskNext64 = "/data/adb/modules/zygisksu/lib64/$zygiskLib"
-    val zygiskNext = "/data/adb/modules/zygisksu/lib/$zygiskLib"
-
-    val cmdRezygisk64 = "[ -f \"$rezygisk64\" ]"
-    if (ShellUtils.fastCmdResult(shell, cmdRezygisk64)) {
-        return true
-    }
-    val cmdZygiskNext64 = "[ -f \"$zygiskNext64\" ]"
-    if (ShellUtils.fastCmdResult(shell, cmdZygiskNext64)) {
-        return true
-    }
-
-    val cmdRezygisk = "[ -f \"$rezygisk\" ]"
-    if (ShellUtils.fastCmdResult(shell, cmdRezygisk)) {
-        return true
-    }
-    val cmdZygiskNext = "[ -f \"$zygiskNext\" ]"
-    return ShellUtils.fastCmdResult(shell, cmdZygiskNext)
 }
 
 fun setAppProfileTemplate(id: String, template: String): Boolean {

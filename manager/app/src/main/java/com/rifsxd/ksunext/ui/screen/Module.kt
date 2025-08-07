@@ -132,6 +132,7 @@ import com.rifsxd.ksunext.ui.util.zygiskRequired
 import com.rifsxd.ksunext.ui.viewmodel.ModuleViewModel
 import com.rifsxd.ksunext.ui.webui.WebUIActivity
 import com.dergoogler.mmrl.ui.component.LabelItem
+import com.dergoogler.mmrl.ui.component.LabelItemDefaults
 import com.topjohnwu.superuser.io.SuFile
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,6 +150,10 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         viewModel.sortZToA = prefs.getBoolean("module_sort_z_to_a", false)
         viewModel.sortSizeLowToHigh = prefs.getBoolean("module_sort_size_low_to_high", false)
         viewModel.sortSizeHighToLow = prefs.getBoolean("module_sort_size_high_to_low", false)
+        viewModel.sortEnabledFirst = prefs.getBoolean("module_sort_enabled_first", false)
+        viewModel.sortActionFirst = prefs.getBoolean("module_sort_action_first", false)
+        viewModel.sortWebUiFirst = prefs.getBoolean("module_sort_webui_first", false)
+        
         if (viewModel.moduleList.isEmpty() || viewModel.isNeedRefresh) {
             viewModel.fetchModuleList()
         }
@@ -197,7 +202,11 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     Scaffold(
         topBar = {
             SearchAppBar(
-                title = { Text(stringResource(R.string.module)) },
+                title = { Text(
+                    text = stringResource(R.string.module),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                ) },
                 searchText = viewModel.search,
                 onSearchTextChange = { viewModel.search = it },
                 onClearClick = { viewModel.search = "" },
@@ -228,11 +237,17 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                     viewModel.sortZToA = false
                                     viewModel.sortSizeLowToHigh = false
                                     viewModel.sortSizeHighToLow = false
+                                    viewModel.sortEnabledFirst = false
+                                    viewModel.sortActionFirst = false
+                                    viewModel.sortWebUiFirst = false
                                     prefs.edit()
                                         .putBoolean("module_sort_a_to_z", viewModel.sortAToZ)
                                         .putBoolean("module_sort_z_to_a", false)
                                         .putBoolean("module_sort_size_low_to_high", false)
                                         .putBoolean("module_sort_size_high_to_low", false)
+                                        .putBoolean("module_sort_enabled_first", false)
+                                        .putBoolean("module_sort_action_first", false)
+                                        .putBoolean("module_sort_webui_first", false)
                                         .apply()
                                     scope.launch {
                                         viewModel.fetchModuleList()
@@ -252,11 +267,17 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                     viewModel.sortAToZ = false
                                     viewModel.sortSizeLowToHigh = false
                                     viewModel.sortSizeHighToLow = false
+                                    viewModel.sortEnabledFirst = false
+                                    viewModel.sortActionFirst = false
+                                    viewModel.sortWebUiFirst = false
                                     prefs.edit()
                                         .putBoolean("module_sort_z_to_a", viewModel.sortZToA)
                                         .putBoolean("module_sort_a_to_z", false)
                                         .putBoolean("module_sort_size_low_to_high", false)
                                         .putBoolean("module_sort_size_high_to_low", false)
+                                        .putBoolean("module_sort_enabled_first", false)
+                                        .putBoolean("module_sort_action_first", false)
+                                        .putBoolean("module_sort_webui_first", false)
                                         .apply()
                                     scope.launch {
                                         viewModel.fetchModuleList()
@@ -276,11 +297,17 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                     viewModel.sortAToZ = false
                                     viewModel.sortZToA = false
                                     viewModel.sortSizeHighToLow = false
+                                    viewModel.sortEnabledFirst = false
+                                    viewModel.sortActionFirst = false
+                                    viewModel.sortWebUiFirst = false
                                     prefs.edit()
                                         .putBoolean("module_sort_size_low_to_high", viewModel.sortSizeLowToHigh)
                                         .putBoolean("module_sort_a_to_z", false)
                                         .putBoolean("module_sort_z_to_a", false)
                                         .putBoolean("module_sort_size_high_to_low", false)
+                                        .putBoolean("module_sort_enabled_first", false)
+                                        .putBoolean("module_sort_action_first", false)
+                                        .putBoolean("module_sort_webui_first", false)
                                         .apply()
                                     scope.launch {
                                         viewModel.fetchModuleList()
@@ -300,11 +327,104 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                     viewModel.sortAToZ = false
                                     viewModel.sortZToA = false
                                     viewModel.sortSizeLowToHigh = false
+                                    viewModel.sortEnabledFirst = false
+                                    viewModel.sortActionFirst = false
+                                    viewModel.sortWebUiFirst = false
                                     prefs.edit()
                                         .putBoolean("module_sort_size_high_to_low", viewModel.sortSizeHighToLow)
                                         .putBoolean("module_sort_a_to_z", false)
                                         .putBoolean("module_sort_z_to_a", false)
                                         .putBoolean("module_sort_size_low_to_high", false)
+                                        .putBoolean("module_sort_enabled_first", false)
+                                        .putBoolean("module_sort_action_first", false)
+                                        .putBoolean("module_sort_webui_first", false)
+                                        .apply()
+                                    scope.launch {
+                                        viewModel.fetchModuleList()
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(stringResource(R.string.module_sort_enabled_first))
+                                },
+                                trailingIcon = {
+                                    Checkbox(checked = viewModel.sortEnabledFirst, onCheckedChange = null)
+                                },
+                                onClick = {
+                                    viewModel.sortEnabledFirst = !viewModel.sortEnabledFirst
+                                    viewModel.sortAToZ = false
+                                    viewModel.sortZToA = false
+                                    viewModel.sortSizeLowToHigh = false
+                                    viewModel.sortSizeHighToLow = false
+                                    viewModel.sortActionFirst = false
+                                    viewModel.sortWebUiFirst = false
+                                    prefs.edit()
+                                        .putBoolean("module_sort_enabled_first", viewModel.sortEnabledFirst)
+                                        .putBoolean("module_sort_a_to_z", false)
+                                        .putBoolean("module_sort_z_to_a", false)
+                                        .putBoolean("module_sort_size_low_to_high", false)
+                                        .putBoolean("module_sort_size_high_to_low", false)
+                                        .putBoolean("module_sort_action_first", false)
+                                        .putBoolean("module_sort_webui_first", false)
+                                        .apply()
+                                    scope.launch {
+                                        viewModel.fetchModuleList()
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(stringResource(R.string.module_sort_action_first))
+                                },
+                                trailingIcon = {
+                                    Checkbox(checked = viewModel.sortActionFirst, onCheckedChange = null)
+                                },
+                                onClick = {
+                                    viewModel.sortActionFirst = !viewModel.sortActionFirst
+                                    viewModel.sortAToZ = false
+                                    viewModel.sortZToA = false
+                                    viewModel.sortSizeLowToHigh = false
+                                    viewModel.sortSizeHighToLow = false
+                                    viewModel.sortEnabledFirst = false
+                                    viewModel.sortWebUiFirst = false
+                                    prefs.edit()
+                                        .putBoolean("module_sort_action_first", viewModel.sortActionFirst)
+                                        .putBoolean("module_sort_a_to_z", false)
+                                        .putBoolean("module_sort_z_to_a", false)
+                                        .putBoolean("module_sort_size_low_to_high", false)
+                                        .putBoolean("module_sort_size_high_to_low", false)
+                                        .putBoolean("module_sort_enabled_first", false)
+                                        .putBoolean("module_sort_webui_first", false)
+                                        .apply()
+                                    scope.launch {
+                                        viewModel.fetchModuleList()
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(stringResource(R.string.module_sort_webui_first))
+                                },
+                                trailingIcon = {
+                                    Checkbox(checked = viewModel.sortWebUiFirst, onCheckedChange = null)
+                                },
+                                onClick = {
+                                    viewModel.sortWebUiFirst = !viewModel.sortWebUiFirst
+                                    viewModel.sortAToZ = false
+                                    viewModel.sortZToA = false
+                                    viewModel.sortSizeLowToHigh = false
+                                    viewModel.sortSizeHighToLow = false
+                                    viewModel.sortEnabledFirst = false
+                                    viewModel.sortActionFirst = false
+                                    prefs.edit()
+                                        .putBoolean("module_sort_webui_first", viewModel.sortWebUiFirst)
+                                        .putBoolean("module_sort_a_to_z", false)
+                                        .putBoolean("module_sort_z_to_a", false)
+                                        .putBoolean("module_sort_size_low_to_high", false)
+                                        .putBoolean("module_sort_size_high_to_low", false)
+                                        .putBoolean("module_sort_enabled_first", false)
+                                        .putBoolean("module_sort_action_first", false)
                                         .apply()
                                     scope.launch {
                                         viewModel.fetchModuleList()
@@ -598,14 +718,16 @@ private fun ModuleList(
     }
     PullToRefreshBox(
         modifier = boxModifier,
+        isRefreshing = viewModel.isRefreshing,
         onRefresh = {
             viewModel.fetchModuleList()
-        },
-        isRefreshing = viewModel.isRefreshing
+        }
     ) {
         LazyColumn(
             state = listState,
-            modifier = modifier,
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState()).nestedScrollConnection),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = remember {
                 PaddingValues(
@@ -614,7 +736,7 @@ private fun ModuleList(
                     end = 16.dp,
                     bottom = 16.dp
                 )
-            },
+            }
         ) {
             when {
                 viewModel.moduleList.isEmpty() -> {
@@ -630,7 +752,6 @@ private fun ModuleList(
                         }
                     }
                 }
-
                 else -> {
                     items(viewModel.moduleList) { module ->
                         val scope = rememberCoroutineScope()
@@ -703,7 +824,6 @@ private fun ModuleList(
         }
 
         DownloadListener(context, onInstallModule)
-
     }
 }
 
@@ -818,7 +938,7 @@ fun ModuleItem(
                     )
                 }
 
-                val filterZygiskModules = zygiskAvailable() || !module.zygiskRequired
+                val filterZygiskModules = Natives.isZygiskEnabled() || !module.zygiskRequired
 
                 LaunchedEffect(Unit) {
                     developerOptionsEnabled = prefs.getBoolean("enable_developer_options", false)
@@ -848,7 +968,7 @@ fun ModuleItem(
                             ) {
                                 LabelItem(
                                     text = formatSize(module.size),
-                                    style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                    style = LabelItemDefaults.style.copy(
                                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -856,16 +976,16 @@ fun ModuleItem(
                                 if (module.remove) {
                                     LabelItem(
                                         text = stringResource(R.string.uninstalled),
-                                        style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                        style = LabelItemDefaults.style.copy(
                                             containerColor = MaterialTheme.colorScheme.errorContainer,
                                             contentColor = MaterialTheme.colorScheme.onErrorContainer
                                         )
                                     )
                                 }
-                                if (!zygiskAvailable() && module.zygiskRequired && !module.remove) {
+                                if (!Natives.isZygiskEnabled() && module.zygiskRequired && !module.remove) {
                                     LabelItem(
                                         text = stringResource(R.string.zygisk_required),
-                                        style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                        style = LabelItemDefaults.style.copy(
                                             containerColor = MaterialTheme.colorScheme.errorContainer,
                                             contentColor = MaterialTheme.colorScheme.onErrorContainer
                                         )
@@ -874,7 +994,7 @@ fun ModuleItem(
                                 if (updateUrl.isNotEmpty() && !module.remove && !module.update) {
                                     LabelItem(
                                         text = stringResource(R.string.module_update_available),
-                                        style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                        style = LabelItemDefaults.style.copy(
                                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                                         )
@@ -884,7 +1004,7 @@ fun ModuleItem(
                                     if (module.update) {
                                         LabelItem(
                                             text = stringResource(R.string.module_updated),
-                                            style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                            style = LabelItemDefaults.style.copy(
                                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                                             )
@@ -895,7 +1015,7 @@ fun ModuleItem(
                                     if (module.hasWebUi && filterZygiskModules) {
                                         LabelItem(
                                             text = stringResource(R.string.webui),
-                                            style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                            style = LabelItemDefaults.style.copy(
                                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
@@ -904,7 +1024,7 @@ fun ModuleItem(
                                     if (module.hasActionScript && filterZygiskModules) {
                                         LabelItem(
                                             text = stringResource(R.string.action),
-                                            style = com.dergoogler.mmrl.ui.component.LabelItemDefaults.style.copy(
+                                            style = LabelItemDefaults.style.copy(
                                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                             )
